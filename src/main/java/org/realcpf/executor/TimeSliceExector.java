@@ -1,31 +1,23 @@
 package org.realcpf.executor;
 
+
 import org.realcpf.future.Worker;
 
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
-public class ExecCenter {
+public class TimeSliceExector implements Runnable{
   private AtomicBoolean ing = new AtomicBoolean(Boolean.TRUE);
   private AtomicBoolean waitting = new AtomicBoolean(Boolean.FALSE);
   private final Executor executor;
   private final Queue<Worker> workers;
-  private Thread current;
-  private final Object lock = new Object();
-
-  public ExecCenter(Executor executor, Queue<Worker> workers) {
+  public TimeSliceExector(Executor executor,Queue<Worker> workers) {
     this.executor = executor;
     this.workers = workers;
   }
-
-
-  public ExecCenter(Executor executor) {
-    this.executor = executor;
-    this.workers = new ConcurrentLinkedQueue<>();
-  }
+  private Thread current;
 
   public void append(Worker worker) {
     if (waitting.get()) {
@@ -51,4 +43,5 @@ public class ExecCenter {
       LockSupport.park();
     }
   }
+
 }
