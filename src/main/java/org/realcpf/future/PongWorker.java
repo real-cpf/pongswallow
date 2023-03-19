@@ -1,5 +1,7 @@
 package org.realcpf.future;
 
+import java.util.concurrent.TimeUnit;
+
 public class PongWorker implements Worker{
   private int count = 0;
   private final String name;
@@ -8,15 +10,26 @@ public class PongWorker implements Worker{
   }
   @Override
   public Worker worker() {
-    System.out.println(name + " start work "+Thread.currentThread());
+    System.out.println(name + " working... "+Thread.currentThread());
+    try {
+      TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
     count++;
-    System.out.println(name + " done work "+Thread.currentThread());
     return this;
   }
 
   @Override
   public boolean done() {
-    System.out.println("count "+count);
     return count == 10;
+  }
+
+  @Override
+  public String toString() {
+    return "PongWorker{" +
+      "count=" + count +
+      ", name='" + name + '\'' +
+      '}';
   }
 }

@@ -4,17 +4,15 @@ package org.realcpf.executor;
 import org.realcpf.future.Worker;
 
 import java.util.Queue;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
 public class TimeSliceExector implements Runnable{
   private AtomicBoolean ing = new AtomicBoolean(Boolean.TRUE);
   private AtomicBoolean waitting = new AtomicBoolean(Boolean.FALSE);
-  private final Executor executor;
   private final Queue<Worker> workers;
-  public TimeSliceExector(Executor executor,Queue<Worker> workers) {
-    this.executor = executor;
+  private long ts = 0L;
+  public TimeSliceExector(Queue<Worker> workers) {
     this.workers = workers;
   }
   private Thread current;
@@ -32,6 +30,7 @@ public class TimeSliceExector implements Runnable{
   public void run() {
     this.current = Thread.currentThread();
     while (ing.get()) {
+      long start = System.currentTimeMillis();
       while (!workers.isEmpty()) {
         Worker worker = workers.poll();
         worker.worker();
@@ -39,9 +38,15 @@ public class TimeSliceExector implements Runnable{
           append(worker);
         }
       }
+      ts = ts + (System.currentTimeMillis() - start);
       waitting.compareAndSet(Boolean.FALSE, Boolean.TRUE);
       LockSupport.park();
     }
+  }
+  public void shutdown(){
+    System.out.println("cost " + ts);
+    this.ing.set(Boolean.FALSE);
+    LockSupport.unpark(current);
   }
 
 }
